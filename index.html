@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+
+<script src="js/pixi.js"></script>
+<script>
+  let app = new PIXI.Application(1000, 800, {backgroundColor : 0x1099bb});
+  document.body.appendChild(app.view);
+
+  const assetLoader = new PIXI.loaders.Loader();
+  assetLoader.add("py", "img/python.png");
+  assetLoader.load(function(loader, resources) {
+    console.log(loader);
+    console.log(resources);
+
+    const logo = new PIXI.Sprite(resources.py.texture);
+    // center the sprite's anchor point
+    logo.anchor.set(0.5);
+
+    // move the sprite to the center of the screen
+    // logo.x = app.screen.width / 2;
+    // logo.y = app.screen.height / 2;
+    logo.x = logo.width / 2;
+    logo.y = logo.width / 2;
+
+    app.stage.addChild(logo);
+
+    // Listen for animate update
+    app.ticker.add(function(delta) {
+      // delta is 1 if running at 100% performance
+      // creates frame-independent transformation
+      logo.rotation += 0.01 * delta;
+    });
+
+    const container = new PIXI.Container();
+
+    for (var i = 0; i < 9; i++) {
+      let tileLogo = new PIXI.Sprite(resources.py.texture);
+      tileLogo.anchor.set(0.5);
+      tileLogo.x = (i % 3) * logo.width;
+      tileLogo.y = Math.floor(i / 3) * logo.height;
+      container.addChild(tileLogo);
+    }
+
+    container.x = (app.screen.width - container.width + logo.width) / 2;
+    container.y = (app.screen.height - container.height + logo.height) / 2;
+
+    app.stage.addChild(container);
+
+    window.container = container;
+  });
+
+</script>
+</body>
+</html>

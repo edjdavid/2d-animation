@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+
+<script src="js/pixi.js"></script>
+<script>
+  let app = new PIXI.Application(1000, 1000, {backgroundColor : 0x1099bb});
+  document.body.appendChild(app.view);
+
+  const assetLoader = new PIXI.loaders.Loader();
+  assetLoader.add("py", "img/python.png");
+
+  function moveX(currentPos, containerWidth, iconWidth, delta) {
+    if (currentPos >= containerWidth + iconWidth / 2) {
+      return -iconWidth / 2;
+
+    } else {
+      const speed = Math.random() * 4;
+      return currentPos + speed * (delta || 1);
+    }
+  }
+
+  function moveY(currentPos, containerHeight, iconHeight, delta) {
+    if (currentPos >= containerHeight + iconHeight / 2) {
+      return -iconHeight / 2;
+
+    } else if (iconHeight < -iconHeight / 2) {
+      return containerHeight + iconHeight / 2;
+
+    } else {
+      const speed = (Math.floor(1 - Math.random() * 2) || 1) * (Math.random() * 4);
+      return currentPos + speed * (delta || 1);
+    }
+  }
+
+  function isBoundingBoxColliding(bbox1, bbox2) {
+    let _bbox1, _bbox2;
+    if (bbox1.x < bbox2.x) {
+      _bbox1 = bbox1;
+      _bbox2 = bbox2;
+    } else {
+      _bbox1 = bbox2;
+      _bbox2 = bbox1
+    }
+    const bbox1MinX = _bbox1.x;
+    const bbox1MaxX = _bbox1.x + _bbox1.width;
+    const bbox2MinX = _bbox2.x;
+    const bbox2MaxX = _bbox2.x + _bbox2.width;
+
+    if (bbox1.y < bbox2.y) {
+      _bbox1 = bbox1;
+      _bbox2 = bbox2;
+    } else {
+      _bbox1 = bbox2;
+      _bbox2 = bbox1
+    }
+    const bbox1MinY = _bbox1.y;
+    const bbox1MaxY = _bbox1.y + _bbox1.height;
+    const bbox2MinY = _bbox2.y;
+    const bbox2MaxY = _bbox2.y + _bbox2.height;
+
+    const isXColliding = (bbox1MinX > bbox2MinX && bbox1MinX < bbox2MaxX) ||
+      (bbox1MaxX > bbox2MinX && bbox1MaxX < bbox2MaxX);
+    const isYColliding = (bbox1MinY > bbox2MinY && bbox1MinX < bbox2MaxY) ||
+      (bbox1MaxY > bbox2MinY && bbox1MaxY < bbox2MaxY);
+
+    return isXColliding && isYColliding;
+  }
+
+  assetLoader.load(function(loader, resources) {
+    console.log(loader);
+    console.log(resources);
+
+    const container = new PIXI.Container();
+    for (let i = 0; i < 500; i++) {
+      let tileLogo = new PIXI.Sprite(resources.py.texture);
+      tileLogo.scale.x = 0.05;
+      tileLogo.scale.y = 0.05;
+      tileLogo.anchor.set(0.5);
+      // tileLogo.x = tileLogo.width / 2;
+      // tileLogo.y = i * tileLogo.height + tileLogo.height/2;
+      tileLogo.x = Math.random() * app.screen.width;
+      tileLogo.y = Math.random() * app.screen.height;
+      container.addChild(tileLogo);
+    }
+
+    app.stage.addChild(container);
+    console.log(isBoundingBoxColliding(container.children[0], container.children[1]));
+
+    app.ticker.add(function(delta) {
+      const collided = [];
+      for (let i in container.children) {
+        const logo = container.children[i];
+        const newX = moveX(logo.x, app.screen.width, logo.width, delta);
+        const newY = moveY(logo.y, app.screen.height, logo.height, delta);
+
+        logo.x = newX;
+        logo.y = newY;
+      }
+
+      for (let i = 0; i < container.children.length - 1; i++) {
+        for (let j = i + 1; j < container.children.length; j++) {
+          if (isBoundingBoxColliding(container.children[i], container.children[j])) {
+            collided[i] = 1;
+            collided[j] = 1;
+          }
+        }
+      }
+
+      for (let i = 0; i < collided.length; i++) {
+        if (collided[i]) {
+          container.children[i].tint = 0xff0000;
+        } else {
+          container.children[i].tint = 0xffffff;
+        }
+      }
+    });
+
+    window.container = container;
+  });
+
+</script>
+</body>
+</html>
